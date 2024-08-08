@@ -6,6 +6,8 @@
     <title>TopUps - Decouple Your Services from LLM Costs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
@@ -328,6 +330,54 @@
         </div>
     </section>
 
+<section class="py-12 bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:text-center">
+            <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">Easy Integration</h2>
+            <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                Seamless SDK Integration
+            </p>
+            <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
+                Integrate TopUps into your application with just a few lines of code. Our SDKs for Node.js, Python, and PHP make it easier than ever to manage LLM costs.
+            </p>
+        </div>
+
+        <div class="mt-10">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="relative">
+                        <div class="flex border-b border-gray-200 dark:border-gray-700">
+                            <button data-tab="node" class="tab-btn px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 focus:outline-none">Node.js</button>
+                            <button data-tab="python" class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 focus:outline-none">Python</button>
+                            <button data-tab="php" class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 focus:outline-none">PHP</button>
+                        </div>
+                        <div id="tab-indicator" class="absolute bottom-0 left-0 h-0.5 bg-indigo-500 transition-all duration-300" style="width: 64px; left: 0px;"></div>
+                    </div>
+                    <div id="code-content" class="mt-4 bg-gray-900 rounded p-4 overflow-x-auto">
+                        <pre><code class="language-javascript text-gray-300">
+const TopUps = require('topups-sdk');
+
+const client = new TopUps('YOUR_API_KEY');
+
+async function checkCredits(userId) {
+  const balance = await client.getBalance(userId);
+  console.log(`User ${userId} has ${balance} credits`);
+
+  if (balance < 100) {
+    await client.addCredits(userId, 1000);
+    console.log('Added 1000 credits');
+  }
+}
+
+checkCredits('user123');
+                        </code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+  
     <section id="waitlist" class="py-12 bg-white dark:bg-gray-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="lg:text-center">
@@ -530,5 +580,98 @@
             createCharts();
         });
     </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const codeContent = document.getElementById('code-content').querySelector('code');
+    const tabIndicator = document.getElementById('tab-indicator');
+
+    const codeExamples = {
+        node: `const TopUps = require('topups-sdk');
+
+const client = new TopUps('YOUR_API_KEY');
+
+async function checkCredits(userId) {
+  const balance = await client.getBalance(userId);
+  console.log(\`User ${userId} has ${balance} credits\`);
+
+  if (balance < 100) {
+    await client.addCredits(userId, 1000);
+    console.log('Added 1000 credits');
+  }
+}
+
+checkCredits('user123');`,
+        python: `from topups_sdk import TopUps
+
+client = TopUps('YOUR_API_KEY')
+
+def check_credits(user_id):
+    balance = client.get_balance(user_id)
+    print(f"User {user_id} has {balance} credits")
+
+    if balance < 100:
+        client.add_credits(user_id, 1000)
+        print("Added 1000 credits")
+
+check_credits('user123')`,
+        php: `<?php
+require_once 'vendor/autoload.php';
+
+use TopUps\\SDK\\Client;
+
+$client = new Client('YOUR_API_KEY');
+
+function checkCredits($userId) {
+    global $client;
+    $balance = $client->getBalance($userId);
+    echo "User {$userId} has {$balance} credits\\n";
+
+    if ($balance < 100) {
+        $client->addCredits($userId, 1000);
+        echo "Added 1000 credits\\n";
+    }
+}
+
+checkCredits('user123');`
+    };
+
+    function updateContent(tabId) {
+        codeContent.textContent = codeExamples[tabId];
+        codeContent.className = `language-${tabId} text-gray-300`;
+        hljs.highlightElement(codeContent);
+    }
+
+    function setActiveTab(clickedTab) {
+        tabButtons.forEach(tab => {
+            if (tab === clickedTab) {
+                tab.classList.add('text-indigo-600', 'dark:text-indigo-400');
+                tab.classList.remove('text-gray-600', 'dark:text-gray-400');
+            } else {
+                tab.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+                tab.classList.add('text-gray-600', 'dark:text-gray-400');
+            }
+        });
+
+        // Update tab indicator position
+        const tabWidth = clickedTab.offsetWidth;
+        const tabLeft = clickedTab.offsetLeft;
+        tabIndicator.style.width = `${tabWidth}px`;
+        tabIndicator.style.left = `${tabLeft}px`;
+    }
+
+    tabButtons.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabId = tab.getAttribute('data-tab');
+            updateContent(tabId);
+            setActiveTab(tab);
+        });
+    });
+
+    // Highlight the initial code
+    hljs.highlightElement(codeContent);
+});
+</script>
+  <script>hljs.highlightAll();</script>
 </body>
 </html>
