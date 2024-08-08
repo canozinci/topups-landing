@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopUps - Decouple Your Services from LLM Costs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .card-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            position: absolute;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .dark .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+        @media (max-width: 1023px) {
+            .card-container {
+                height: 300px;
+            }
+            .card {
+                transform: scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <nav class="sticky top-0 bg-white dark:bg-gray-800 shadow-md z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">TopUps</span>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="relative overflow-hidden bg-gray-50 dark:bg-gray-900 pt-0 pb-16 sm:pb-24 lg:py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+                <!-- Card Container -->
+                <div class="mt-4 lg:mt-0 relative sm:max-w-lg sm:mx-auto lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center order-first lg:order-last">
+                    <div class="card-container">
+                        <!-- Credit Balance Card -->
+                        <div class="card bg-white dark:bg-gray-800 w-80 h-64" id="card1">
+                            <div class="p-6">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Credit Balance</h3>
+                                <div class="flex items-baseline mb-4">
+                                    <span class="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400">5,000</span>
+                                    <span class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">credits</span>
+                                </div>
+                                <div class="relative pt-1">
+                                    <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200 dark:bg-indigo-700">
+                                        <div style="width:70%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
+                                    </div>
+                                </div>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">70% of monthly limit used</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Usage Analytics Card -->
+                        <div class="card bg-white dark:bg-gray-800 w-96 h-80" id="card2">
+                            <div class="p-6">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Usage Analytics</h3>
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total API Calls</p>
+                                        <p class="text-xl font-semibold text-gray-900 dark:text-white">1,234,567</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total Cost</p>
+                                        <p class="text-xl font-semibold text-gray-900 dark:text-white">$3,456.78</p>
+                                    </div>
+                                </div>
+                                <div class="h-40">
+                                    <canvas id="usageChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Top-up Card -->
+                        <div class="card bg-white dark:bg-gray-800 w-96 h-48" id="card3">
+                            <div class="p-6">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Top-up Credits</h3>
+                                <div class="flex items-center">
+                                    <input type="number" class="flex-grow mr-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Amount">
+                                    <button class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Add Credits
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left order-last lg:order-first">
+                    <h1 class="mt-4 lg:mt-0 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
+                        <span class="block xl:inline">Decouple Your Services</span>
+                        <span class="block text-indigo-600 dark:text-indigo-400 xl:inline">from LLM Costs</span>
+                    </h1>
+                    <p class="mt-3 text-base text-gray-500 dark:text-gray-400 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                        TopUps provides a turnkey usage-based credit system for consuming LLM APIs. Empower your AI-driven services with flexible pricing, advanced analytics, and seamless integration.
+                    </p>
+                    <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                        <div class="rounded-md shadow">
+                            <a href="#waitlist" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                                Join the Waitlist
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+
+
+    <section class="py-12 bg-white dark:bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">Features</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                    A better way to manage LLM costs
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
+                    TopUps provides powerful tools to help you optimize your AI service costs and improve profitability.
+                </p>
+            </div>
+
+            <div class="mt-10">
+                <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+                    <div class="relative">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">Dynamic Credit System</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
+                            Implement a flexible, usage-based pricing model for your AI services. Decouple your pricing from fluctuating LLM API costs.
+                        </dd>
+                    </div>
+
+                    <div class="relative">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">Advanced Analytics</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
+                            Gain deep insights into your LLM usage patterns. Track costs, usage trends, and user behavior to optimize your AI services.
+                        </dd>
+                    </div>
+
+                    <div class="relative">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">Automatic Top-ups</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
+                            Never worry about service interruptions. Our intelligent top-up system ensures your users always have access to your AI-powered features.
+                        </dd>
+                    </div>
+
+                    <div class="relative">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">Developer-Friendly SDK</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
+                            Integrate TopUps seamlessly with our robust SDK. Built by developers, for developers.
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-12 bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">UI Components</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                    Ready-to-Use UI Components
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
+                    Enhance your user experience with our customizable, plug-and-play UI components.
+                </p>
+            </div>
+
+            <div class="mt-10">
+                <div class="space-y-10 md:space-y-0 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-10">
+                    <!-- Credit Balance Widget -->
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                                Credit Balance
+                            </h3>
+                            <div class="mt-5">
+                                <div class="flex items-baseline">
+                                    <p class="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                                        5,000
+                                    </p>
+                                    <p class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                        credits
+                                    </p>
+                                </div>
+                                <div class="mt-6">
+                                    <div class="relative pt-1">
+                                        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200 dark:bg-indigo-700">
+                                            <div style="width:70%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                        70% of monthly limit used
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Usage Analytics Dashboard -->
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                                Usage Analytics
+                            </h3>
+                            <div class="mt-5">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total API Calls</p>
+                                        <p class="text-xl font-semibold text-gray-900 dark:text-white">1,234,567</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total Cost</p>
+                                        <p class="text-xl font-semibold text-gray-900 dark:text-white">$3,456.78</p>
+                                    </div>
+                                </div>
+                                <div style="height: 200px;">
+                                    <canvas id="uiComponentChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top-up Credit Component -->
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+                                Top-up Credits
+                            </h3>
+                            <div class="mt-5">
+                                <div class="flex items-center">
+                                    <input type="number" class="flex-grow mr-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Enter amount">
+                                    <button class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Add Credits
+                                    </button>
+                                </div>
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        Current balance: <span class="font-semibold">5,000 credits</span>
+                                    </p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        Last top-up: <span class="font-semibold">1,000 credits</span> on May 15, 2023
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="waitlist" class="py-12 bg-white dark:bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">Join the Waitlist</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                    Be the First to Experience TopUps
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
+                    Sign up now to get early access and exclusive updates on TopUps.
+                </p>
+            </div>
+
+            <div class="mt-10 max-w-xl mx-auto">
+                <form action="#" method="POST" class="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8">
+                    <div>
+                        <label for="first-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            First name
+                        </label>
+                        <div class="mt-1">
+                            <input type="text" name="first-name" id="first-name" autocomplete="given-name" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="last-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Last name
+                        </label>
+                        <div class="mt-1">
+                            <input type="text" name="last-name" id="last-name" autocomplete="family-name" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Email
+                        </label>
+                        <div class="mt-1">
+                            <input id="email" name="email" type="email" autocomplete="email" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="company" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Company
+                        </label>
+                        <div class="mt-1">
+                            <input type="text" name="company" id="company" autocomplete="organization" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600">
+                            Join the Waitlist
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex justify-center space-x-6 md:order-2">
+                    <a href="#" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <span class="sr-only">Twitter</span>
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <span class="sr-only">GitHub</span>
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                </div>
+                <div class="mt-8 md:mt-0 md:order-1">
+                    <p class="text-center text-base text-gray-400">&copy; 2023 TopUps, Inc. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const html = document.documentElement;
+            let usageChart, uiComponentChart;
+
+            // Function to set the theme
+            function setTheme(isDark) {
+                if (isDark) {
+                    html.classList.add('dark');
+                } else {
+                    html.classList.remove('dark');
+                }
+                localStorage.theme = isDark ? 'dark' : 'light';
+                updateChartsTheme();
+            }
+
+            // Check for saved theme preference or use system preference
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                setTheme(true);
+            } else {
+                setTheme(false);
+            }
+
+            // Toggle dark mode
+            darkModeToggle.addEventListener('click', () => {
+                setTheme(!html.classList.contains('dark'));
+            });
+
+            // Card animation
+            const cards = document.querySelectorAll('.card');
+            let currentIndex = 0;
+
+            function showNextCard() {
+                cards[currentIndex].classList.remove('active');
+                currentIndex = (currentIndex + 1) % cards.length;
+                cards[currentIndex].classList.add('active');
+            }
+
+            // Show first card initially
+            cards[0].classList.add('active');
+
+            // Rotate cards every 5 seconds
+            setInterval(showNextCard, 5000);
+
+            // Chart.js setup
+            function createCharts() {
+                const ctx = document.getElementById('usageChart').getContext('2d');
+                usageChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'API Usage',
+                            data: [12, 19, 3, 5, 2, 3],
+                            borderColor: 'rgb(79, 70, 229)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: getChartOptions()
+                });
+
+                const uiComponentCtx = document.getElementById('uiComponentChart').getContext('2d');
+                uiComponentChart = new Chart(uiComponentCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'API Usage',
+                            data: [15, 25, 20, 30, 28, 35],
+                            borderColor: 'rgb(79, 70, 229)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: getChartOptions()
+                });
+            }
+
+            function getChartOptions() {
+                const isDark = html.classList.contains('dark');
+                return {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                color: isDark ? 'rgb(229, 231, 235)' : 'rgb(107, 114, 128)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                color: isDark ? 'rgb(229, 231, 235)' : 'rgb(107, 114, 128)'
+                            }
+                        }
+                    }
+                };
+            }
+
+            function updateChartsTheme() {
+                if (usageChart && uiComponentChart) {
+                    const options = getChartOptions();
+                    usageChart.options = options;
+                    uiComponentChart.options = options;
+                    usageChart.update();
+                    uiComponentChart.update();
+                }
+            }
+
+            createCharts();
+        });
+    </script>
+</body>
+</html>
