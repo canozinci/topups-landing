@@ -378,6 +378,54 @@ checkCredits('user123');
     </div>
 </section>
   
+<section class="py-12 bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:text-center">
+            <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">Features</h2>
+            <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                Powerful Top-up Mechanisms
+            </p>
+            <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
+                TopUps provides a comprehensive suite of tools to manage credits and payments effortlessly.
+            </p>
+        </div>
+
+        <div class="mt-10">
+            <div class="relative bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+                <div class="max-w-7xl mx-auto">
+                    <div class="relative z-10 pb-8 bg-white dark:bg-gray-800 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+                        <div class="relative pt-6 px-4 sm:px-6 lg:px-8">
+                            <div id="feature-carousel" class="mt-10">
+                                <!-- Feature slides will be dynamically inserted here -->
+                            </div>
+                        </div>
+                        <div class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+                            <div class="sm:text-center lg:text-left">
+                                <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                                    <div class="rounded-md shadow">
+                                        <button id="prev-feature" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                                            Previous
+                                        </button>
+                                    </div>
+                                    <div class="mt-3 sm:mt-0 sm:ml-3">
+                                        <button id="next-feature" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+                    <div id="feature-image" class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full bg-indigo-300 dark:bg-indigo-600 flex items-center justify-center">
+                        <!-- SVG icon will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
     <section id="waitlist" class="py-12 bg-white dark:bg-gray-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="lg:text-center">
@@ -582,6 +630,104 @@ checkCredits('user123');
     </script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Top-up Mechanisms Carousel
+    const features = [
+        {
+            title: "Credit Management System",
+            description: "Purchase and manage credits across different AI services. Enjoy volume discounts for larger purchases.",
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
+        },
+        {
+            title: "Flexible Payment Options",
+            description: "Multiple payment gateways and methods supported, including invoice-based billing for enterprise customers.",
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />'
+        },
+        {
+            title: "Auto Top-up Feature",
+            description: "Set custom thresholds for automatic account top-ups, ensuring uninterrupted service.",
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />'
+        },
+        {
+            title: "Subscription Models",
+            description: "Offer recurring credit packages with flexible upgrade/downgrade options for your customers.",
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />'
+        },
+        {
+            title: "Usage Tracking and Alerts",
+            description: "Real-time credit usage tracking with customizable alerts and usage projections.",
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />'
+        },
+        {
+            title: "Credit Policies",
+            description: "Implement fair expiration policies and credit rollover options for subscription plans.",
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />'
+        },
+        {
+            title: "Gifting and Transfer System",
+            description: "Enable credit gifting and transfers between accounts, perfect for teams and promotions.",
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />'
+        },
+        {
+            title: "Promotional Credits",
+            description: "Easily distribute and track promotional or bonus credits, separate from paid credits.",
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
+        }
+    ];
+
+    let currentFeature = 0;
+
+    function updateFeature() {
+        console.log("Updating feature to index:", currentFeature);
+        const feature = features[currentFeature];
+        const carouselElement = document.getElementById('feature-carousel');
+        const imageElement = document.getElementById('feature-image');
+        
+        if (!carouselElement || !imageElement) {
+            console.error("Carousel or image element not found");
+            return;
+        }
+
+        carouselElement.innerHTML = `
+            <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white sm:text-3xl">
+                ${feature.title}
+            </h3>
+            <p class="mt-3 text-base text-gray-500 dark:text-gray-400 sm:mt-5 sm:text-lg">
+                ${feature.description}
+            </p>
+        `;
+        imageElement.innerHTML = `
+            <svg class="h-24 w-24 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                ${feature.icon}
+            </svg>
+        `;
+        console.log("Feature updated:", feature.title);
+    }
+
+    const prevButton = document.getElementById('prev-feature');
+    const nextButton = document.getElementById('next-feature');
+
+    if (prevButton && nextButton) {
+        prevButton.addEventListener('click', () => {
+            console.log("Previous button clicked");
+            currentFeature = (currentFeature - 1 + features.length) % features.length;
+            updateFeature();
+        });
+
+        nextButton.addEventListener('click', () => {
+            console.log("Next button clicked");
+            currentFeature = (currentFeature + 1) % features.length;
+            updateFeature();
+        });
+
+        console.log("Event listeners added to buttons");
+    } else {
+        console.error("Previous or Next button not found");
+    }
+
+    updateFeature();  // Initialize with the first feature
+    console.log("Initial feature set");
+
+  console.log("DOM fully loaded and parsed");
     const tabButtons = document.querySelectorAll('.tab-btn');
     const codeContent = document.getElementById('code-content').querySelector('code');
     const tabIndicator = document.getElementById('tab-indicator');
@@ -593,7 +739,7 @@ const client = new TopUps('YOUR_API_KEY');
 
 async function checkCredits(userId) {
   const balance = await client.getBalance(userId);
-  console.log(\`User ${userId} has ${balance} credits\`);
+  
 
   if (balance < 100) {
     await client.addCredits(userId, 1000);
@@ -641,7 +787,7 @@ checkCredits('user123');`
         codeContent.className = `language-${tabId} text-gray-300`;
         hljs.highlightElement(codeContent);
     }
-
+ 
     function setActiveTab(clickedTab) {
         tabButtons.forEach(tab => {
             if (tab === clickedTab) {
@@ -660,16 +806,19 @@ checkCredits('user123');`
         tabIndicator.style.left = `${tabLeft}px`;
     }
 
+
+
     tabButtons.forEach(tab => {
         tab.addEventListener('click', () => {
             const tabId = tab.getAttribute('data-tab');
             updateContent(tabId);
             setActiveTab(tab);
         });
-    });
-
+          });
+        
     // Highlight the initial code
     hljs.highlightElement(codeContent);
+ 
 });
 </script>
   <script>hljs.highlightAll();</script>
