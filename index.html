@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TopUps - Decouple Your Services from LLM Costs</title>
+    <title>TopUps - Turnkey Credit System for AI SaaS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/atom-one-dark.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                    },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                     },
@@ -23,479 +25,916 @@
     </script>
     <style>
         .card-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            perspective: 1000px;
         }
         .card {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
             position: absolute;
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
-            border-radius: 8px;
+            top: 0;
+            left: 0;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .pricing-example {
+            transition: all 0.3s ease;
+        }
+        .pricing-example:hover {
+            transform: translateY(-5px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .card.active {
-            visibility: visible;
-            opacity: 1;
+        .tab-content {
+            display: none;
         }
-        .dark .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        .tab-content.active {
+            display: block;
         }
-        @media (max-width: 1023px) {
-            .card-container {
-                height: 300px;
-            }
-            .card {
-                transform: scale(0.8);
-            }
+        .tabs-container {
+            position: relative;
+            overflow: hidden;
+        }
+        .tabs-scroll {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .tabs-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .scroll-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            border: none;
+            font-size: 24px;
+            padding: 8px;
+            cursor: pointer;
+        }
+        .scroll-button.left {
+            left: 0;
+        }
+        .scroll-button.right {
+            right: 0;
         }
     </style>
 </head>
-<body class="font-sans bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
-    <nav class="sticky top-0 bg-white dark:bg-gray-800 shadow-md z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center">
-                        <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">TopUps</span>
-                    </div>
-                </div>
+<body class="font-sans bg-gray-50 text-gray-900">
+    <header class="bg-white shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
+            <div class="w-full py-6 flex items-center justify-between border-b border-indigo-500 lg:border-none">
                 <div class="flex items-center">
-                    <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
-                    </button>
+                    <a href="#">
+                        <span class="sr-only">TopUps</span>
+                        <img class="h-10 w-auto" src="/api/placeholder/150x50.png?text=TopUps" alt="TopUps Logo">
+                    </a>
+                </div>
+                <div class="ml-10 space-x-4">
+                    <a href="#features" class="text-base font-medium text-gray-500 hover:text-gray-900">Features</a>
+                    <a href="#how-it-works" class="text-base font-medium text-gray-500 hover:text-gray-900">How It Works</a>
+                    <a href="#pricing" class="text-base font-medium text-gray-500 hover:text-gray-900">Pricing Options</a>
+                    <a href="#contact" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700">
+                        Get Early Access
+                    </a>
                 </div>
             </div>
-        </div>
-    </nav>
-
-    <header class="relative overflow-hidden bg-gray-50 dark:bg-gray-900 pt-0 pb-16 sm:pb-24 lg:py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:grid lg:grid-cols-12 lg:gap-8">
-                <!-- Card Container -->
-                <div class="mt-4 lg:mt-0 relative sm:max-w-lg sm:mx-auto lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center order-first lg:order-last">
-                    <div class="card-container">
-                        <!-- Credit Balance Card -->
-                        <div class="card bg-white dark:bg-gray-800 w-80 h-64" id="card1">
-                            <div class="p-6">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Credit Balance</h3>
-                                <div class="flex items-baseline mb-4">
-                                    <span class="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400">5,000</span>
-                                    <span class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">credits</span>
-                                </div>
-                                <div class="relative pt-1">
-                                    <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200 dark:bg-indigo-700">
-                                        <div style="width:70%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
-                                    </div>
-                                </div>
-                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">70% of monthly limit used</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Usage Analytics Card -->
-                        <div class="card bg-white dark:bg-gray-800 w-96 h-80" id="card2">
-                            <div class="p-6">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Usage Analytics</h3>
-                                <div class="grid grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total API Calls</p>
-                                        <p class="text-xl font-semibold text-gray-900 dark:text-white">1,234,567</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total Cost</p>
-                                        <p class="text-xl font-semibold text-gray-900 dark:text-white">$3,456.78</p>
-                                    </div>
-                                </div>
-                                <div class="h-40">
-                                    <canvas id="usageChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Top-up Card -->
-                        <div class="card bg-white dark:bg-gray-800 w-96 h-48" id="card3">
-                            <div class="p-6">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Top-up Credits</h3>
-                                <div class="flex items-center">
-                                    <input type="number" class="flex-grow mr-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Amount">
-                                    <button class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        Add Credits
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Text Content -->
-                <div class="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left order-last lg:order-first">
-                    <h1 class="mt-4 lg:mt-0 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
-                        <span class="block xl:inline">Decouple Your Services</span>
-                        <span class="block text-indigo-600 dark:text-indigo-400 xl:inline">from LLM Costs</span>
-                    </h1>
-                    <p class="mt-3 text-base text-gray-500 dark:text-gray-400 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                        TopUps provides a turnkey usage-based credit system for consuming LLM APIs. Empower your AI-driven services with flexible pricing, advanced analytics, and seamless integration.
-                    </p>
-                    <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                        <div class="rounded-md shadow">
-                            <a href="#waitlist" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
-                                Join the Waitlist
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </nav>
     </header>
 
+    <main>
+        <!-- Hero Section -->
+        <div class="relative bg-white overflow-hidden">
+            <div class="max-w-7xl mx-auto">
+                <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+                    <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+                        <div class="sm:text-center lg:text-left">
+                            <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+                                <span class="block xl:inline">Turnkey Credit System</span>
+                                <span class="block text-primary xl:inline">for AI SaaS</span>
+                            </h1>
+                            <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-auto">
+                                Seamlessly manage usage-based costs, implement flexible pricing models, and scale your AI business with our SDK and ready-to-use UI components.
+                            </p>
+                            <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                                <div class="rounded-md shadow">
+                                    <a href="#contact" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                                        Get Started
+                                    </a>
+                                </div>
+                                <div class="mt-3 sm:mt-0 sm:ml-3">
+                                    <a href="#how-it-works" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
+                                        Learn More
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+            <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+                <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full" src="/api/placeholder/800x600.png?text=AI+Pricing+Made+Easy" alt="AI Pricing Made Easy">
+            </div>
+        </div>
 
+        <!-- Features Section -->
+        <div class="py-12 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="lg:text-center">
+                    <h2 class="text-base text-primary font-semibold tracking-wide uppercase">Features</h2>
+                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                        Comprehensive Solution for AI Pricing
+                    </p>
+                    <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                        TopUps combines a powerful SDK with ready-to-use UI components for a complete credit management system.
+                    </p>
+                </div>
 
+                <div class="mt-10">
+                    <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+                        <div class="relative">
+                            <dt>
+                                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                    </svg>
+                                </div>
+                                <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Powerful SDK</p>
+                            </dt>
+                            <dd class="mt-2 ml-16 text-base text-gray-500">
+                                Easily integrate our SDK to manage credits, track usage, and implement complex pricing models.
+                            </dd>
+                        </div>
 
-    <section class="py-12 bg-white dark:bg-gray-800">
+                        <div class="relative">
+                            <dt>
+                                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                                    </svg>
+                                </div>
+                                <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Embeddable UI Components</p>
+                            </dt>
+                            <dd class="mt-2 ml-16 text-base text-gray-500">
+                                Quickly implement user-facing features with our pre-built, customizable UI components.
+                            </dd>
+                        </div>
+
+                        <div class="relative">
+                            <dt>
+                                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Detailed Analytics</p>
+                            </dt>
+                            <dd class="mt-2 ml-16 text-base text-gray-500">
+                                Gain insights into usage patterns and optimize your costs with our advanced analytics dashboard.
+                            </dd>
+                        </div>
+
+                        <div class="relative">
+                            <dt>
+                                <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary text-white">
+                                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                </div>
+                                <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Flexible Pricing Models</p>
+                            </dt>
+                            <dd class="mt-2 ml-16 text-base text-gray-500">
+                                Implement usage-based, subscription, or hybrid pricing models with ease.
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- UI Components Showcase -->
+        <div class="py-12 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="lg:text-center">
+                    <h2 class="text-base text-primary font-semibold tracking-wide uppercase">UI Components</h2>
+                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                        Ready-to-Use, Customizable UI
+                    </p>
+                    <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                        Quickly implement user-facing features with our pre-built components.
+                    </p>
+                </div>
+
+                <div class="mt-10">
+                    <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                        <!-- Credit Balance Component -->
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">Credit Balance</h3>
+                                <div class="mt-5">
+                                    <div class="flex items-baseline">
+                                        <p class="text-4xl font-extrabold text-primary">5,000</p>
+                                        <p class="ml-2 text-sm font-medium text-gray-500">credits</p>
+                                    </div>
+                                    <div class="mt-6">
+                                        <div class="relative pt-1">
+                                            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary-200">
+                                                <div style="width:70%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+                                            </div>
+                                        </div>
+                         <p class="text-sm font-medium text-gray-500">
+                                            70% of monthly limit used
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Usage Analytics Component -->
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">Usage Analytics</h3>
+                                <div class="mt-5">
+                                    <canvas id="usageChart" width="300" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top-up Component -->
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">Top-up Credits</h3>
+                                <div class="mt-5">
+                                    <div class="flex items-center">
+                                        <input type="number" class="flex-grow mr-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary" placeholder="Amount">
+                                        <button class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                            Add Credits
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works Section -->
+        <div id="how-it-works" class="py-12 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="lg:text-center">
+                    <h2 class="text-base text-primary font-semibold tracking-wide uppercase">How It Works</h2>
+                    <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                        Implement TopUps in 3 Simple Steps
+                    </p>
+                </div>
+
+                <div class="mt-10">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-between">
+                            <span class="bg-white px-3 text-lg font-medium text-gray-900">
+                                1. Integrate SDK
+                            </span>
+                            <span class="bg-white px-3 text-lg font-medium text-gray-900">
+                                2. Customize UI
+                            </span>
+                            <span class="bg-white px-3 text-lg font-medium text-gray-900">
+                                3. Launch & Monitor
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-1 gap-8 md:grid-cols-3">
+                        <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">1. Integrate SDK</h3>
+                                <div class="mt-2 max-w-xl text-sm text-gray-500">
+                                    <p>Add our SDK to your project with just a few lines of code.</p>
+                                </div>
+                                <div class="mt-3 text-sm">
+                                    <a href="#" class="font-medium text-primary hover:text-indigo-500">
+                                        View Documentation <span aria-hidden="true">&rarr;</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">2. Customize UI</h3>
+                                <div class="mt-2 max-w-xl text-sm text-gray-500">
+                                    <p>Tailor our pre-built UI components to match your brand and needs.</p>
+                                </div>
+                                <div class="mt-3 text-sm">
+                                    <a href="#" class="font-medium text-primary hover:text-indigo-500">
+                                        Explore Components <span aria-hidden="true">&rarr;</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">3. Launch & Monitor</h3>
+                                <div class="mt-2 max-w-xl text-sm text-gray-500">
+                                    <p>Go live with your new pricing system and track performance in real-time.</p>
+                                </div>
+                                <div class="mt-3 text-sm">
+                                    <a href="#" class="font-medium text-primary hover:text-indigo-500">
+                                        View Demo Dashboard <span aria-hidden="true">&rarr;</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+   <!-- Pricing Examples Section -->
+    <section id="pricing-examples" class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:text-center">
-                <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">Features</h2>
-                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                    A better way to manage LLM costs
+            <div class="text-center mb-16">
+                <h2 class="text-base text-indigo-600 font-semibold tracking-wide uppercase">Flexible Pricing Solutions</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Example Use Cases: Enhance Your Pricing with TopUps
                 </p>
-                <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
-                    TopUps provides powerful tools to help you optimize your AI service costs and improve profitability.
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    Explore how various AI SaaS companies use TopUps to offer more controlled, attractive, and transparent packages to their customers.
+                </p>
+            </div>
+
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <!-- Tabs -->
+                <div class="tabs-container border-b border-gray-200">
+                    <button class="scroll-button left" id="scrollLeft">&lt;</button>
+                    <button class="scroll-button right" id="scrollRight">&gt;</button>
+                    <div class="tabs-scroll">
+                        <button class="tab-btn text-gray-600 py-4 px-6 block hover:text-indigo-500 focus:outline-none text-indigo-500 border-b-2 font-medium border-indigo-500 whitespace-nowrap" data-tab="content-generator">
+                            AI Content Generator
+                        </button>
+                        <button class="tab-btn text-gray-600 py-4 px-6 block hover:text-indigo-500 focus:outline-none whitespace-nowrap" data-tab="image-editor">
+                            AI Image Editor
+                        </button>
+                        <button class="tab-btn text-gray-600 py-4 px-6 block hover:text-indigo-500 focus:outline-none whitespace-nowrap" data-tab="chatbot">
+                            AI Customer Service Chatbot
+                        </button>
+                        <button class="tab-btn text-gray-600 py-4 px-6 block hover:text-indigo-500 focus:outline-none whitespace-nowrap" data-tab="language-tutor">
+                            AI Language Tutor
+                        </button>
+                        <button class="tab-btn text-gray-600 py-4 px-6 block hover:text-indigo-500 focus:outline-none whitespace-nowrap" data-tab="data-analysis">
+                            AI Data Analysis Tool
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Contents -->
+   <div class="p-6">
+        <!-- AI Content Generator -->
+        <div id="content-generator" class="tab-content active">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-4">Use Case: AI Content Generator</h3>
+            <p class="text-gray-600 mb-4">Pricing Model: Freemium + Tiered Credits</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">Before TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Free plan: 3 short articles/month, limited features</li>
+                        <li>Basic plan: $29/month for 50 articles</li>
+                        <li>Pro plan: $99/month for 200 articles</li>
+                        <li>Unused articles don't roll over</li>
+                        <li>No flexibility for high-volume months</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">With TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Free tier: 10 credits/month (1 credit = 1 short article)</li>
+                        <li>Basic plan: $29/month for 60 credits</li>
+                        <li>Pro plan: $99/month for 250 credits</li>
+                        <li>Additional features cost extra credits</li>
+                        <li>Unused credits roll over (max 3 months)</li>
+                        <li>Purchase additional credit packs: 100 for $25, 500 for $100</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 bg-indigo-50 rounded-lg p-4">
+                <h4 class="font-semibold text-lg text-indigo-900 mb-2">Benefits:</h4>
+                <ul class="list-disc list-inside text-indigo-900 space-y-2">
+                    <li>Freemium model attracts new users and enables upselling</li>
+                    <li>Credit system provides flexibility for varying content needs</li>
+                    <li>Roll-over credits reduce waste and improve customer satisfaction</li>
+                    <li>Additional credit packs allow for handling high-volume periods</li>
+                    <li>Feature-based credit usage encourages exploration of advanced tools</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- AI Image Editor -->
+        <div id="image-editor" class="tab-content">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-4">Use Case: AI Image Editor</h3>
+            <p class="text-gray-600 mb-4">Pricing Model: Usage-Based Pricing with Volume Discounts</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">Before TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Flat rate: $49/month for unlimited edits</li>
+                        <li>Many casual users find it too expensive</li>
+                        <li>Heavy users sometimes abuse the unlimited plan</li>
+                        <li>No distinction between simple and complex edits</li>
+                        <li>Difficult to upsell premium features</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">With TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Pay-as-you-go: Starting at $0.10 per edit credit</li>
+                        <li>Tiered pricing:
+                            <ul class="list-disc list-inside ml-4">
+                                <li>100 credits for $8 ($0.08/credit)</li>
+                                <li>500 credits for $35 ($0.07/credit)</li>
+                                <li>1000 credits for $60 ($0.06/credit)</li>
+                            </ul>
+                        </li>
+                        <li>Different edits cost varying credits (e.g., 1 for basic, 3 for advanced)</li>
+                        <li>Credits never expire</li>
+                        <li>Premium features available for additional credits</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 bg-indigo-50 rounded-lg p-4">
+                <h4 class="font-semibold text-lg text-indigo-900 mb-2">Benefits:</h4>
+                <ul class="list-disc list-inside text-indigo-900 space-y-2">
+                    <li>Accessible to casual users with pay-as-you-go option</li>
+                    <li>Volume discounts incentivize higher usage and customer retention</li>
+                    <li>Differentiated pricing for simple vs. complex edits</li>
+                    <li>Upselling premium features becomes easier with credit system</li>
+                    <li>Non-expiring credits encourage long-term customer relationships</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- AI Customer Service Chatbot -->
+        <div id="chatbot" class="tab-content">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-4">Use Case: AI Customer Service Chatbot</h3>
+            <p class="text-gray-600 mb-4">Pricing Model: Hybrid (Base Subscription + Usage Credits)</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">Before TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Startup: $199/month for 1000 conversations</li>
+                        <li>Business: $499/month for 5000 conversations</li>
+                        <li>Enterprise: Custom pricing</li>
+                        <li>Overage charges apply for exceeded limits</li>
+                        <li>No distinction between simple and complex queries</li>
+                        <li>Difficult to scale during peak seasons</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">With TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Startup: $149/month + 1000 credits (1 credit = 1 basic conversation)</li>
+                        <li>Business: $399/month + 5000 credits</li>
+                        <li>Enterprise: Custom base rate + credit packages</li>
+                        <li>Complex queries use more credits (e.g., 3 for multi-step issues)</li>
+                        <li>Additional credits: $0.10 each, volume discounts available</li>
+                        <li>Unused credits roll over (up to 25% of monthly allocation)</li>
+                        <li>Seasonal credit packs available for peak times</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 bg-indigo-50 rounded-lg p-4">
+                <h4 class="font-semibold text-lg text-indigo-900 mb-2">Benefits:</h4>
+                <ul class="list-disc list-inside text-indigo-900 space-y-2">
+                    <li>Base subscription provides predictable costs for businesses</li>
+                    <li>Credit system allows for handling varying conversation complexity</li>
+                    <li>Flexible scaling during high-demand periods with additional credits</li>
+                    <li>Roll-over credits reduce waste and improve customer satisfaction</li>
+                    <li>Seasonal packs help businesses prepare for known busy periods</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- AI Language Tutor -->
+        <div id="language-tutor" class="tab-content">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-4">Use Case: AI Language Tutor</h3>
+            <p class="text-gray-600 mb-4">Pricing Model: Time-Based Credits with Subscription Options</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">Before TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Monthly subscription: $50 for 5 hours of tutoring</li>
+                        <li>Unused time doesn't carry over</li>
+                        <li>Additional hours charged at $15/hour</li>
+                        <li>No flexibility for varying study intensities</li>
+                        <li>Single pricing tier doesn't suit all learners</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">With TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Basic plan: $30/month includes 100 credits (1 credit = 3 minutes)</li>
+                        <li>Premium plan: $80/month includes 300 credits + advanced features</li>
+                        <li>Pay-as-you-go option: Purchase credits as needed</li>
+                        <li>Additional credits: $10 for 50 credits</li>
+                        <li>Credits valid for 6 months</li>
+                        <li>Bonus credits for consistent daily practice</li>
+                        <li>Special packages: 500 credits for $80, 1000 credits for $150</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 bg-indigo-50 rounded-lg p-4">
+                <h4 class="font-semibold text-lg text-indigo-900 mb-2">Benefits:</h4>
+                <ul class="list-disc list-inside text-indigo-900 space-y-2">
+                    <li>Flexible options suit different learning styles and intensities</li>
+                    <li>Minute-based credits allow for short, frequent practice sessions</li>
+                    <li>Subscription plans provide value for regular users</li>
+                    <li>Pay-as-you-go option caters to occasional learners</li>
+                    <li>Longer credit validity encourages long-term engagement</li>
+                    <li>Bonus credits incentivize consistent learning habits</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- AI Data Analysis Tool -->
+        <div id="data-analysis" class="tab-content">
+            <h3 class="text-2xl font-semibold text-gray-900 mb-4">Use Case: AI Data Analysis Tool</h3>
+            <p class="text-gray-600 mb-4">Pricing Model: Tiered Usage + Feature-Based Credits</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">Before TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Basic: $99/month for 100GB data processing</li>
+                        <li>Pro: $299/month for 500GB data processing</li>
+                        <li>Enterprise: Custom pricing</li>
+                        <li>Additional features sold separately</li>
+                        <li>Overage charges for exceeding data limits</li>
+                        <li>No flexibility for occasional high-volume projects</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-lg text-gray-900 mb-2">With TopUps:</h4>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Base plans:
+                            <ul class="list-disc list-inside ml-4">
+                                <li>Basic: $79/month includes 100 credits</li>
+                                <li>Pro: $249/month includes 600 credits</li>
+                                <li>Enterprise: Custom base rate + credits</li>
+                            </ul>
+                        </li>
+                        <li>1 credit = 1GB data processing or 1 use of a standard AI model</li>
+                        <li>Advanced AI models: 5-10 credits per use</li>
+                        <li>Additional credit packs: 100 credits for $50, 500 credits for $200</li>
+                        <li>Unused credits roll over for 3 months</li>
+                        <li>API access for automated credit usage and monitoring</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 bg-indigo-50 rounded-lg p-4">
+                <h4 class="font-semibold text-lg text-indigo-900 mb-2">Benefits:</h4>
+                <ul class="list-disc list-inside text-indigo-900 space-y-2">
+                    <li>Unified credit system for both data processing and AI model usage</li>
+                    <li>Flexibility to handle occasional high-volume projects</li>
+                    <li>Encourages exploration of advanced AI models with clear credit costs</li>
+                    <li>Rollover credits reduce waste for inconsistent usage patterns</li>
+                    <li>API access enables integration with client's data pipelines and budgeting systems</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="text-center mt-12">
+                <p class="text-xl text-gray-600 mb-4">Ready to optimize your AI SaaS pricing with TopUps?</p>
+                <a href="#contact" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                    Get Started with TopUps
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Revised Why TopUps? section -->
+    <section id="why-topups" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-base text-indigo-600 font-semibold tracking-wide uppercase">Why Choose TopUps?</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Built for the AI-Driven World
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    TopUps is designed from the ground up for AI SaaS companies, offering capabilities that general-purpose billing solutions can't match.
                 </p>
             </div>
 
             <div class="mt-10">
-                <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-                    <div class="relative">
-                        <dt>
-                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                <div class="bg-gray-50 rounded-lg overflow-hidden shadow">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                            TopUps vs. General-Purpose Billing Solutions
+                        </h3>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <h4 class="font-semibold text-indigo-600 mb-2">TopUps: AI-Native Billing</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start">
+                                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>Native support for token-based, request-based, and compute time-based billing</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>AI-specific analytics (e.g., model performance, token usage optimization)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>Seamless integration with popular AI services (OpenAI, Google Cloud AI, etc.)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>AI cost management tools to optimize underlying service expenses</span>
+                                    </li>
+                                </ul>
                             </div>
-                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">Dynamic Credit System</p>
+                            <div>
+                                <h4 class="font-semibold text-gray-600 mb-2">General-Purpose Solutions</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start">
+                                        <svg class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        <span>Limited support for AI-specific pricing models, requiring complex workarounds</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <svg class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        <span>Generic analytics not tailored for AI service metrics</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <svg class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        <span>No built-in integrations with AI services, requiring custom development</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <svg class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        <span>Lack of AI-specific cost management features</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-16">
+                <h3 class="text-2xl font-semibold text-gray-900 mb-6">Buy vs. Build: Why Choose TopUps?</h3>
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span><strong>Time-to-Market:</strong> Implement a sophisticated credit system in days, not months. Focus on your core AI product instead of building billing infrastructure.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            <span><strong>Reliability & Scalability:</strong> Benefit from a system designed to handle millions of transactions and scale with your growth.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <span><strong>Continuous Improvement:</strong> Get access to new features and optimizations without dedicating internal resources to maintenance.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            <span><strong>Compliance & Security:</strong> Ensure your billing system adheres to industry standards and best practices without the overhead of managing it yourself.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <span><strong>Advanced Analytics:</strong> Gain insights into your AI service usage and customer behavior without building complex analytics systems from scratch.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span><strong>Expert Support:</strong> Access a team of billing and AI experts to help optimize your pricing strategy and resolve issues quickly.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+
+        </div>
+    </section>
+
+        <!-- Testimonial Section -->
+        <div class="bg-white py-16 lg:py-24">
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="relative">
+                    <img class="mx-auto h-8" src="/api/placeholder/200x50.png?text=Client+Logo" alt="Client Logo">
+                    <blockquote class="mt-10">
+                        <div class="max-w-3xl mx-auto text-center text-2xl leading-9 font-medium text-gray-900">
+                            <p>
+                                "TopUps has revolutionized our pricing strategy. We've seen a 40% increase in customer satisfaction and a 25% boost in revenue since implementing their solution. The combination of their powerful SDK and user-friendly UI components made integration a breeze."
+                            </p>
+                        </div>
+                        <footer class="mt-8">
+                            <div class="md:flex md:items-center md:justify-center">
+                                <div class="md:flex-shrink-0">
+                                    <img class="mx-auto h-10 w-10 rounded-full" src="/api/placeholder/40x40.png?text=JD" alt="Jane Doe">
+                                </div>
+                                <div class="mt-3 text-center md:mt-0 md:ml-4 md:flex md:items-center">
+                                    <div class="text-base font-medium text-gray-900">Jane Doe</div>
+                                    <svg class="hidden md:block mx-1 h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M11 0h3L9 20H6l5-20z" />
+                                    </svg>
+                                    <div class="text-base font-medium text-gray-500">CEO, AI Innovations Inc.</div>
+                                </div>
+                            </div>
+                        </footer>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+
+    <!-- FAQ Section -->
+    <div class="bg-white">
+        <div class="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-extrabold text-gray-900 text-center mb-8">
+                Frequently Asked Questions
+            </h2>
+            <div class="max-w-3xl mx-auto divide-y-2 divide-gray-200">
+                <dl class="mt-6 space-y-6 divide-y divide-gray-200">
+                    <div class="pt-6">
+                        <dt class="text-lg">
+                            <button type="button" class="text-left w-full flex justify-between items-start text-gray-400" aria-controls="faq-0" aria-expanded="false">
+                                <span class="font-medium text-gray-900">
+                                    How does TopUps integrate with existing AI services?
+                                </span>
+                                <span class="ml-6 h-7 flex items-center">
+                                    <svg class="rotate-0 h-6 w-6 transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
                         </dt>
-                        <dd class="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                            Implement a flexible, usage-based pricing model for your AI services. Decouple your pricing from fluctuating LLM API costs.
+                        <dd class="mt-2 pr-12" id="faq-0">
+                            <p class="text-base text-gray-500">
+                                TopUps provides a flexible SDK that easily integrates with popular AI services and platforms. Our system acts as a middleware, managing the credit system and usage tracking without interfering with your core AI functionality. We offer detailed documentation and support to ensure a smooth integration process.
+                            </p>
                         </dd>
                     </div>
 
-                    <div class="relative">
-                        <dt>
-                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                            </div>
-                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">Advanced Analytics</p>
+                    <div class="pt-6">
+                        <dt class="text-lg">
+                            <button type="button" class="text-left w-full flex justify-between items-start text-gray-400" aria-controls="faq-1" aria-expanded="false">
+                                <span class="font-medium text-gray-900">
+                                    Can I customize the UI components to match my brand?
+                                </span>
+                                <span class="ml-6 h-7 flex items-center">
+                                    <svg class="rotate-0 h-6 w-6 transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
                         </dt>
-                        <dd class="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                            Gain deep insights into your LLM usage patterns. Track costs, usage trends, and user behavior to optimize your AI services.
+                        <dd class="mt-2 pr-12" id="faq-1">
+                            <p class="text-base text-gray-500">
+                                Absolutely! Our UI components are designed to be highly customizable. You can easily adjust colors, fonts, and layouts to match your brand identity. We also provide theming options and CSS overrides for more advanced customization needs.
+                            </p>
                         </dd>
                     </div>
 
-                    <div class="relative">
-                        <dt>
-                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
-                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">Automatic Top-ups</p>
+                    <div class="pt-6">
+                        <dt class="text-lg">
+                            <button type="button" class="text-left w-full flex justify-between items-start text-gray-400" aria-controls="faq-2" aria-expanded="false">
+                                <span class="font-medium text-gray-900">
+                                    How does TopUps handle different currencies and international pricing?
+                                </span>
+                                <span class="ml-6 h-7 flex items-center">
+                                    <svg class="rotate-0 h-6 w-6 transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
                         </dt>
-                        <dd class="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                            Never worry about service interruptions. Our intelligent top-up system ensures your users always have access to your AI-powered features.
+                        <dd class="mt-2 pr-12" id="faq-2">
+                            <p class="text-base text-gray-500">
+                                TopUps supports multiple currencies and provides tools for managing international pricing. You can set different prices for different regions, and our system handles currency conversions automatically. We also offer features to help with tax compliance and invoicing for global customers.
+                            </p>
                         </dd>
                     </div>
 
-                    <div class="relative">
-                        <dt>
-                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
-                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                                </svg>
-                            </div>
-                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900 dark:text-white">Developer-Friendly SDK</p>
+                    <div class="pt-6">
+                        <dt class="text-lg">
+                            <button type="button" class="text-left w-full flex justify-between items-start text-gray-400" aria-controls="faq-3" aria-expanded="false">
+                                <span class="font-medium text-gray-900">
+                                    What kind of analytics and reporting does TopUps offer?
+                                </span>
+                                <span class="ml-6 h-7 flex items-center">
+                                    <svg class="rotate-0 h-6 w-6 transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
                         </dt>
-                        <dd class="mt-2 ml-16 text-base text-gray-500 dark:text-gray-400">
-                            Integrate TopUps seamlessly with our robust SDK. Built by developers, for developers.
+                        <dd class="mt-2 pr-12" id="faq-3">
+                            <p class="text-base text-gray-500">
+                                TopUps provides comprehensive analytics and reporting features. You can track credit usage, revenue, customer behavior, and more. Our dashboard offers real-time insights, customizable reports, and data export options. We also provide APIs for integrating this data into your existing analytics tools.
+                            </p>
+                        </dd>
+                    </div>
+
+                    <div class="pt-6">
+                        <dt class="text-lg">
+                            <button type="button" class="text-left w-full flex justify-between items-start text-gray-400" aria-controls="faq-4" aria-expanded="false">
+                                <span class="font-medium text-gray-900">
+                                    How does TopUps ensure the security of financial transactions?
+                                </span>
+                                <span class="ml-6 h-7 flex items-center">
+                                    <svg class="rotate-0 h-6 w-6 transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
+                        </dt>
+                        <dd class="mt-2 pr-12" id="faq-4">
+                            <p class="text-base text-gray-500">
+                                Security is our top priority. TopUps uses industry-standard encryption for all data transmissions and storage. We are PCI DSS compliant for handling credit card information. Our system also includes fraud detection mechanisms and regular security audits to ensure the safety of all financial transactions.
+                            </p>
                         </dd>
                     </div>
                 </dl>
             </div>
         </div>
-    </section>
-
-    <section class="py-12 bg-gray-50 dark:bg-gray-900">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:text-center">
-                <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">UI Components</h2>
-                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                    Ready-to-Use UI Components
-                </p>
-                <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
-                    Enhance your user experience with our customizable, plug-and-play UI components.
-                </p>
-            </div>
-
-            <div class="mt-10">
-                <div class="space-y-10 md:space-y-0 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-10">
-                    <!-- Credit Balance Widget -->
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                        <div class="px-4 py-5 sm:p-6">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                                Credit Balance
-                            </h3>
-                            <div class="mt-5">
-                                <div class="flex items-baseline">
-                                    <p class="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400">
-                                        5,000
-                                    </p>
-                                    <p class="ml-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        credits
-                                    </p>
-                                </div>
-                                <div class="mt-6">
-                                    <div class="relative pt-1">
-                                        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200 dark:bg-indigo-700">
-                                            <div style="width:70%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
-                                        </div>
-                                    </div>
-                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                        70% of monthly limit used
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Usage Analytics Dashboard -->
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                        <div class="px-4 py-5 sm:p-6">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                                Usage Analytics
-                            </h3>
-                            <div class="mt-5">
-                                <div class="flex items-center justify-between mb-4">
-                                    <div>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total API Calls</p>
-                                        <p class="text-xl font-semibold text-gray-900 dark:text-white">1,234,567</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Total Cost</p>
-                                        <p class="text-xl font-semibold text-gray-900 dark:text-white">$3,456.78</p>
-                                    </div>
-                                </div>
-                                <div style="height: 200px;">
-                                    <canvas id="uiComponentChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Top-up Credit Component -->
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                        <div class="px-4 py-5 sm:p-6">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
-                                Top-up Credits
-                            </h3>
-                            <div class="mt-5">
-                                <div class="flex items-center">
-                                    <input type="number" class="flex-grow mr-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Enter amount">
-                                    <button class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        Add Credits
-                                    </button>
-                                </div>
-                                <div class="mt-4">
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                                        Current balance: <span class="font-semibold">5,000 credits</span>
-                                    </p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        Last top-up: <span class="font-semibold">1,000 credits</span> on May 15, 2023
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-<section class="py-12 bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:text-center">
-            <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">Easy Integration</h2>
-            <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                Seamless SDK Integration
-            </p>
-            <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
-                Integrate TopUps into your application with just a few lines of code. Our SDKs for Node.js, Python, and PHP make it easier than ever to manage LLM costs.
-            </p>
-        </div>
-
-        <div class="mt-10">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                <div class="px-4 py-5 sm:p-6">
-                    <div class="relative">
-                        <div class="flex border-b border-gray-200 dark:border-gray-700">
-                            <button data-tab="node" class="tab-btn px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 focus:outline-none">Node.js</button>
-                            <button data-tab="python" class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 focus:outline-none">Python</button>
-                            <button data-tab="php" class="tab-btn px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 focus:outline-none">PHP</button>
-                        </div>
-                        <div id="tab-indicator" class="absolute bottom-0 left-0 h-0.5 bg-indigo-500 transition-all duration-300" style="width: 64px; left: 0px;"></div>
-                    </div>
-                    <div id="code-content" class="mt-4 bg-gray-900 rounded p-4 overflow-x-auto">
-                        <pre><code class="language-javascript text-gray-300">
-const TopUps = require('topups-sdk');
-
-const client = new TopUps('YOUR_API_KEY');
-
-async function checkCredits(userId) {
-  const balance = await client.getBalance(userId);
-  console.log(`User ${userId} has ${balance} credits`);
-
-  if (balance < 100) {
-    await client.addCredits(userId, 1000);
-    console.log('Added 1000 credits');
-  }
-}
-
-checkCredits('user123');
-                        </code></pre>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-</section>
-  
-<section class="py-12 bg-gray-50 dark:bg-gray-900">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:text-center">
-            <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">Features</h2>
-            <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                Powerful Top-up Mechanisms
-            </p>
-            <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
-                TopUps provides a comprehensive suite of tools to manage credits and payments effortlessly.
-            </p>
-        </div>
-
-        <div class="mt-10">
-            <div class="relative bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
-                <div class="max-w-7xl mx-auto">
-                    <div class="relative z-10 pb-8 bg-white dark:bg-gray-800 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-                        <div class="relative pt-6 px-4 sm:px-6 lg:px-8">
-                            <div id="feature-carousel" class="mt-10">
-                                <!-- Feature slides will be dynamically inserted here -->
-                            </div>
-                        </div>
-                        <div class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-                            <div class="sm:text-center lg:text-left">
-                                <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                                    <div class="rounded-md shadow">
-                                        <button id="prev-feature" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
-                                            Previous
-                                        </button>
-                                    </div>
-                                    <div class="mt-3 sm:mt-0 sm:ml-3">
-                                        <button id="next-feature" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-                    <div id="feature-image" class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full bg-indigo-300 dark:bg-indigo-600 flex items-center justify-center">
-                        <!-- SVG icon will be dynamically inserted here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-    <section id="waitlist" class="py-12 bg-white dark:bg-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="lg:text-center">
-                <h2 class="text-base text-indigo-600 dark:text-indigo-400 font-semibold tracking-wide uppercase">Join the Waitlist</h2>
-                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-                    Be the First to Experience TopUps
+        <!-- CTA Section -->
+        <div class="bg-primary">
+            <div class="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+                    <span class="block">Ready to revolutionize your AI pricing?</span>
+                    <span class="block">Get started with TopUps today.</span>
+                </h2>
+                <p class="mt-4 text-lg leading-6 text-indigo-200">
+                    Join the growing community of AI startups optimizing their pricing and scaling their businesses with our turnkey solution.
                 </p>
-                <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
-                    Sign up now to get early access and exclusive updates on TopUps.
-                </p>
-            </div>
-
-            <div class="mt-10 max-w-xl mx-auto">
-                <form action="#" method="POST" class="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8">
-                    <div>
-                        <label for="first-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            First name
-                        </label>
-                        <div class="mt-1">
-                            <input type="text" name="first-name" id="first-name" autocomplete="given-name" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="last-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Last name
-                        </label>
-                        <div class="mt-1">
-                            <input type="text" name="last-name" id="last-name" autocomplete="family-name" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        </div>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Email
-                        </label>
-                        <div class="mt-1">
-                            <input id="email" name="email" type="email" autocomplete="email" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        </div>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label for="company" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Company
-                        </label>
-                        <div class="mt-1">
-                            <input type="text" name="company" id="company" autocomplete="organization" class="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        </div>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600">
-                            Join the Waitlist
-                        </button>
-                    </div>
-                </form>
+                <a href="#" class="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary bg-white hover:bg-indigo-50 sm:w-auto">
+                    Request Early Access
+                </a>
             </div>
         </div>
-    </section>
 
-    <footer class="bg-gray-50 dark:bg-gray-900">
-        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-            <div class="md:flex md:items-center md:justify-between">
+
+      
+      
+        <!-- Footer -->
+        <footer class="bg-white">
+            <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
                 <div class="flex justify-center space-x-6 md:order-2">
-                    <a href="#" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
                         <span class="sr-only">Twitter</span>
                         <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
                         </svg>
                     </a>
-                    <a href="#" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
                         <span class="sr-only">GitHub</span>
                         <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-500">
+                        <span class="sr-only">LinkedIn</span>
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd" />
                         </svg>
                     </a>
                 </div>
@@ -503,324 +942,83 @@ checkCredits('user123');
                     <p class="text-center text-base text-gray-400">&copy; 2023 TopUps, Inc. All rights reserved.</p>
                 </div>
             </div>
-        </div>
-    </footer>
+        </footer>
+    </main>
+
     <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            const html = document.documentElement;
-            let usageChart, uiComponentChart;
-
-            // Function to set the theme
-            function setTheme(isDark) {
-                if (isDark) {
-                    html.classList.add('dark');
-                } else {
-                    html.classList.remove('dark');
-                }
-                localStorage.theme = isDark ? 'dark' : 'light';
-                updateChartsTheme();
-            }
-
-            // Check for saved theme preference or use system preference
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                setTheme(true);
-            } else {
-                setTheme(false);
-            }
-
-            // Toggle dark mode
-            darkModeToggle.addEventListener('click', () => {
-                setTheme(!html.classList.contains('dark'));
-            });
-
-            // Card animation
-            const cards = document.querySelectorAll('.card');
-            let currentIndex = 0;
-
-            function showNextCard() {
-                cards[currentIndex].classList.remove('active');
-                currentIndex = (currentIndex + 1) % cards.length;
-                cards[currentIndex].classList.add('active');
-            }
-
-            // Show first card initially
-            cards[0].classList.add('active');
-
-            // Rotate cards every 5 seconds
-            setInterval(showNextCard, 5000);
-
-            // Chart.js setup
-            function createCharts() {
-                const ctx = document.getElementById('usageChart').getContext('2d');
-                usageChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                        datasets: [{
-                            label: 'API Usage',
-                            data: [12, 19, 3, 5, 2, 3],
-                            borderColor: 'rgb(79, 70, 229)',
-                            tension: 0.1
-                        }]
-                    },
-                    options: getChartOptions()
-                });
-
-                const uiComponentCtx = document.getElementById('uiComponentChart').getContext('2d');
-                uiComponentChart = new Chart(uiComponentCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                        datasets: [{
-                            label: 'API Usage',
-                            data: [15, 25, 20, 30, 28, 35],
-                            borderColor: 'rgb(79, 70, 229)',
-                            tension: 0.1
-                        }]
-                    },
-                    options: getChartOptions()
-                });
-            }
-
-            function getChartOptions() {
-                const isDark = html.classList.contains('dark');
-                return {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                            },
-                            ticks: {
-                                color: isDark ? 'rgb(229, 231, 235)' : 'rgb(107, 114, 128)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-                            },
-                            ticks: {
-                                color: isDark ? 'rgb(229, 231, 235)' : 'rgb(107, 114, 128)'
-                            }
-                        }
+        // Chart.js for Usage Analytics
+        const ctx = document.getElementById('usageChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Credit Usage',
+                    data: [1000, 1500, 2000, 1800, 2200, 2700],
+                    borderColor: 'rgb(79, 70, 229)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
-                };
-            }
-
-            function updateChartsTheme() {
-                if (usageChart && uiComponentChart) {
-                    const options = getChartOptions();
-                    usageChart.options = options;
-                    uiComponentChart.options = options;
-                    usageChart.update();
-                    uiComponentChart.update();
                 }
             }
-
-            createCharts();
         });
+        document.querySelectorAll('dt > button').forEach(button => {
+            button.addEventListener('click', () => {
+                const expanded = button.getAttribute('aria-expanded') === 'true' || false;
+                button.setAttribute('aria-expanded', !expanded);
+                button.querySelector('svg').classList.toggle('rotate-180');
+                const content = button.parentNode.nextElementSibling;
+                content.classList.toggle('hidden');
+            });
+        });
+       // Tab functionality
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const tabsScroll = document.querySelector('.tabs-scroll');
+        const scrollLeftButton = document.getElementById('scrollLeft');
+        const scrollRightButton = document.getElementById('scrollRight');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                
+                tabButtons.forEach(btn => btn.classList.remove('text-indigo-500', 'border-b-2', 'border-indigo-500'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                button.classList.add('text-indigo-500', 'border-b-2', 'border-indigo-500');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Scroll functionality
+        scrollLeftButton.addEventListener('click', () => {
+            tabsScroll.scrollBy({ left: -200, behavior: 'smooth' });
+        });
+
+        scrollRightButton.addEventListener('click', () => {
+            tabsScroll.scrollBy({ left: 200, behavior: 'smooth' });
+        });
+
+        // Show/hide scroll buttons based on scroll position
+        tabsScroll.addEventListener('scroll', () => {
+            scrollLeftButton.style.display = tabsScroll.scrollLeft > 0 ? 'block' : 'none';
+            scrollRightButton.style.display = 
+                tabsScroll.scrollLeft < tabsScroll.scrollWidth - tabsScroll.clientWidth ? 'block' : 'none';
+        });
+
+        // Initial check for scroll buttons
+        scrollLeftButton.style.display = 'none';
+        scrollRightButton.style.display = 
+            tabsScroll.scrollWidth > tabsScroll.clientWidth ? 'block' : 'none';
+
+        // Add any additional JavaScript for interactivity here
     </script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Top-up Mechanisms Carousel
-    const features = [
-        {
-            title: "Credit Management System",
-            description: "Purchase and manage credits across different AI services. Enjoy volume discounts for larger purchases.",
-            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
-        },
-        {
-            title: "Flexible Payment Options",
-            description: "Multiple payment gateways and methods supported, including invoice-based billing for enterprise customers.",
-            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />'
-        },
-        {
-            title: "Auto Top-up Feature",
-            description: "Set custom thresholds for automatic account top-ups, ensuring uninterrupted service.",
-            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />'
-        },
-        {
-            title: "Subscription Models",
-            description: "Offer recurring credit packages with flexible upgrade/downgrade options for your customers.",
-            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />'
-        },
-        {
-            title: "Usage Tracking and Alerts",
-            description: "Real-time credit usage tracking with customizable alerts and usage projections.",
-            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />'
-        },
-        {
-            title: "Credit Policies",
-            description: "Implement fair expiration policies and credit rollover options for subscription plans.",
-            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />'
-        },
-        {
-            title: "Gifting and Transfer System",
-            description: "Enable credit gifting and transfers between accounts, perfect for teams and promotions.",
-            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />'
-        },
-        {
-            title: "Promotional Credits",
-            description: "Easily distribute and track promotional or bonus credits, separate from paid credits.",
-            icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
-        }
-    ];
-
-    let currentFeature = 0;
-
-    function updateFeature() {
-        console.log("Updating feature to index:", currentFeature);
-        const feature = features[currentFeature];
-        const carouselElement = document.getElementById('feature-carousel');
-        const imageElement = document.getElementById('feature-image');
-        
-        if (!carouselElement || !imageElement) {
-            console.error("Carousel or image element not found");
-            return;
-        }
-
-        carouselElement.innerHTML = `
-            <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white sm:text-3xl">
-                ${feature.title}
-            </h3>
-            <p class="mt-3 text-base text-gray-500 dark:text-gray-400 sm:mt-5 sm:text-lg">
-                ${feature.description}
-            </p>
-        `;
-        imageElement.innerHTML = `
-            <svg class="h-24 w-24 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                ${feature.icon}
-            </svg>
-        `;
-        console.log("Feature updated:", feature.title);
-    }
-
-    const prevButton = document.getElementById('prev-feature');
-    const nextButton = document.getElementById('next-feature');
-
-    if (prevButton && nextButton) {
-        prevButton.addEventListener('click', () => {
-            console.log("Previous button clicked");
-            currentFeature = (currentFeature - 1 + features.length) % features.length;
-            updateFeature();
-        });
-
-        nextButton.addEventListener('click', () => {
-            console.log("Next button clicked");
-            currentFeature = (currentFeature + 1) % features.length;
-            updateFeature();
-        });
-
-        console.log("Event listeners added to buttons");
-    } else {
-        console.error("Previous or Next button not found");
-    }
-
-    updateFeature();  // Initialize with the first feature
-    console.log("Initial feature set");
-
-  console.log("DOM fully loaded and parsed");
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    const codeContent = document.getElementById('code-content').querySelector('code');
-    const tabIndicator = document.getElementById('tab-indicator');
-
-    const codeExamples = {
-        node: `const TopUps = require('topups-sdk');
-
-const client = new TopUps('YOUR_API_KEY');
-
-async function checkCredits(userId) {
-  const balance = await client.getBalance(userId);
-  
-
-  if (balance < 100) {
-    await client.addCredits(userId, 1000);
-    console.log('Added 1000 credits');
-  }
-}
-
-checkCredits('user123');`,
-        python: `from topups_sdk import TopUps
-
-client = TopUps('YOUR_API_KEY')
-
-def check_credits(user_id):
-    balance = client.get_balance(user_id)
-    print(f"User {user_id} has {balance} credits")
-
-    if balance < 100:
-        client.add_credits(user_id, 1000)
-        print("Added 1000 credits")
-
-check_credits('user123')`,
-        php: `<?php
-require_once 'vendor/autoload.php';
-
-use TopUps\\SDK\\Client;
-
-$client = new Client('YOUR_API_KEY');
-
-function checkCredits($userId) {
-    global $client;
-    $balance = $client->getBalance($userId);
-    echo "User {$userId} has {$balance} credits\\n";
-
-    if ($balance < 100) {
-        $client->addCredits($userId, 1000);
-        echo "Added 1000 credits\\n";
-    }
-}
-
-checkCredits('user123');`
-    };
-
-    function updateContent(tabId) {
-        codeContent.textContent = codeExamples[tabId];
-        codeContent.className = `language-${tabId} text-gray-300`;
-        hljs.highlightElement(codeContent);
-    }
- 
-    function setActiveTab(clickedTab) {
-        tabButtons.forEach(tab => {
-            if (tab === clickedTab) {
-                tab.classList.add('text-indigo-600', 'dark:text-indigo-400');
-                tab.classList.remove('text-gray-600', 'dark:text-gray-400');
-            } else {
-                tab.classList.remove('text-indigo-600', 'dark:text-indigo-400');
-                tab.classList.add('text-gray-600', 'dark:text-gray-400');
-            }
-        });
-
-        // Update tab indicator position
-        const tabWidth = clickedTab.offsetWidth;
-        const tabLeft = clickedTab.offsetLeft;
-        tabIndicator.style.width = `${tabWidth}px`;
-        tabIndicator.style.left = `${tabLeft}px`;
-    }
-
-
-
-    tabButtons.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const tabId = tab.getAttribute('data-tab');
-            updateContent(tabId);
-            setActiveTab(tab);
-        });
-          });
-        
-    // Highlight the initial code
-    hljs.highlightElement(codeContent);
- 
-});
-</script>
-  <script>hljs.highlightAll();</script>
 </body>
 </html>
