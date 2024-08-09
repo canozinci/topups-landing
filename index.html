@@ -25,11 +25,24 @@
     </script>
     <style>
         .card-container {
-            perspective: 1000px;
+            position: relative;
+            height: 400px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .card {
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
+            position: absolute;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card.active {
+            visibility: visible;
+            opacity: 1;
         }
         .card.flipped {
             transform: rotateY(180deg);
@@ -86,64 +99,173 @@
         .scroll-button.right {
             right: 0;
         }
+              @media (max-width: 1023px) {
+            .card-container {
+                height: 300px;
+            }
+            .card {
+                transform: scale(0.8);
+            }
+        }
     </style>
 </head>
 <body class="font-sans bg-gray-50 text-gray-900">
     <header class="bg-white shadow-sm">
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
-            <div class="w-full py-6 flex items-center justify-between border-b border-indigo-500 lg:border-none">
-                <div class="flex items-center">
-                    <a href="#">
-                        <span class="sr-only">TopUps</span>
-                        <img class="h-10 w-auto" src="/api/placeholder/150x50.png?text=TopUps" alt="TopUps Logo">
-                    </a>
-                </div>
-                <div class="ml-10 space-x-4">
-                    <a href="#features" class="text-base font-medium text-gray-500 hover:text-gray-900">Features</a>
-                    <a href="#how-it-works" class="text-base font-medium text-gray-500 hover:text-gray-900">How It Works</a>
-                    <a href="#pricing" class="text-base font-medium text-gray-500 hover:text-gray-900">Pricing Options</a>
-                    <a href="#contact" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700">
-                        Get Early Access
+<nav class="sticky top-0 bg-white shadow-md z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="#" class="flex items-center">
+                        <div class="flex flex-col">
+                            <div class="flex items-center">
+                                <span class="text-3xl font-extrabold text-indigo-600 tracking-tight">Top</span>
+                                <span class="text-3xl font-extrabold text-gray-900 tracking-tight">Ups</span>
+                            </div>
+                            <span class="text-xs font-semibold text-gray-500 tracking-widest uppercase mt-0.5">AI Billing Platform</span>
+                        </div>
                     </a>
                 </div>
             </div>
-        </nav>
+            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <!-- Navigation Links -->
+                <a href="#features" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    Features
+                </a>
+                <a href="#how-it-works" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    How It Works
+                </a>
+                <a href="#pricing" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    Pricing
+                </a>
+                <a href="#contact" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    Contact
+                </a>
+            </div>
+            <div class="flex items-center">
+                <a href="#get-started" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                    Get Started
+                </a>
+                <!-- Mobile menu button -->
+                <div class="flex items-center sm:hidden ml-4">
+                    <button type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <!-- Icon when menu is closed -->
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <!-- Icon when menu is open -->
+                        <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile menu, show/hide based on menu state. -->
+    <div class="sm:hidden" id="mobile-menu">
+        <div class="pt-2 pb-3 space-y-1">
+            <a href="#features" class="bg-indigo-50 border-indigo-500 text-indigo-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Features</a>
+            <a href="#how-it-works" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">How It Works</a>
+            <a href="#pricing" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Pricing</a>
+            <a href="#contact" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Contact</a>
+        </div>
+    </div>
+</nav>
     </header>
 
     <main>
-        <!-- Hero Section -->
-        <div class="relative bg-white overflow-hidden">
-            <div class="max-w-7xl mx-auto">
-                <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-                    <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-                        <div class="sm:text-center lg:text-left">
+    <!-- Hero Section with Animated UI Components -->
+    <div class="relative bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:pb-28 xl:pb-32">
+                <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+                    <div class="flex flex-col lg:flex-row items-center">
+                        <!-- UI Component Cards - Now first on mobile -->
+                        <div class="w-full lg:w-1/2 order-first lg:order-last mb-8 lg:mb-0">
+                            <div class="card-container">
+                                <!-- Credit Balance Card -->
+                                <div class="card bg-white w-80 h-64" id="card1">
+                                    <div class="p-6">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4">Credit Balance</h3>
+                                        <div class="flex items-baseline mb-4">
+                                            <span class="text-4xl font-extrabold text-indigo-600">5,000</span>
+                                            <span class="ml-2 text-sm font-medium text-gray-500">credits</span>
+                                        </div>
+                                        <div class="relative pt-1">
+                                            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200">
+                                                <div style="width:70%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"></div>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-500">70% of monthly limit used</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Usage Analytics Card -->
+                                <div class="card bg-white w-96 h-80" id="card2">
+                                    <div class="p-6">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4">Usage Analytics</h3>
+                                        <div class="grid grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <p class="text-sm text-gray-500">Total API Calls</p>
+                                                <p class="text-xl font-semibold text-gray-900">1,234,567</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm text-gray-500">Total Cost</p>
+                                                <p class="text-xl font-semibold text-gray-900">$3,456.78</p>
+                                            </div>
+                                        </div>
+                                        <div class="h-40">
+                                            <canvas id="usageChart2"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Top-up Card -->
+                                <div class="card bg-white w-96 h-48" id="card3">
+                                    <div class="p-6">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4">Top-up Credits</h3>
+                                        <div class="flex items-center">
+                                            <input type="number" class="flex-grow mr-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="Amount">
+                                            <button class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                Add Credits
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Text Content - Now second on mobile -->
+                        <div class="w-full lg:w-1/2 text-center lg:text-left order-last lg:order-first">
                             <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                                <span class="block xl:inline">Turnkey Credit System</span>
-                                <span class="block text-primary xl:inline">for AI SaaS</span>
+                                <span class="block xl:inline">AI-Native Billing for</span>
+                                <span class="block text-indigo-600 xl:inline">SaaS Companies</span>
                             </h1>
-                            <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-auto">
-                                Seamlessly manage usage-based costs, implement flexible pricing models, and scale your AI business with our SDK and ready-to-use UI components.
+                            <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                                TopUps provides a flexible credit system and powerful analytics tailored for AI-driven businesses. Streamline your billing, optimize costs, and focus on what matters most - your AI innovations.
                             </p>
                             <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                                 <div class="rounded-md shadow">
-                                    <a href="#contact" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
-                                        Get Started
+                                    <a href="#" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10">
+                                        Get started
                                     </a>
                                 </div>
                                 <div class="mt-3 sm:mt-0 sm:ml-3">
-                                    <a href="#how-it-works" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
-                                        Learn More
+                                    <a href="#" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10">
+                                        Live demo
                                     </a>
                                 </div>
                             </div>
                         </div>
-                    </main>
-                </div>
-            </div>
-            <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-                <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full" src="/api/placeholder/800x600.png?text=AI+Pricing+Made+Easy" alt="AI Pricing Made Easy">
+                    </div>
+                </main>
             </div>
         </div>
+    </div>
+
 
         <!-- Features Section -->
         <div class="py-12 bg-white">
@@ -755,35 +877,7 @@
         </div>
     </section>
 
-        <!-- Testimonial Section -->
-        <div class="bg-white py-16 lg:py-24">
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="relative">
-                    <img class="mx-auto h-8" src="/api/placeholder/200x50.png?text=Client+Logo" alt="Client Logo">
-                    <blockquote class="mt-10">
-                        <div class="max-w-3xl mx-auto text-center text-2xl leading-9 font-medium text-gray-900">
-                            <p>
-                                "TopUps has revolutionized our pricing strategy. We've seen a 40% increase in customer satisfaction and a 25% boost in revenue since implementing their solution. The combination of their powerful SDK and user-friendly UI components made integration a breeze."
-                            </p>
-                        </div>
-                        <footer class="mt-8">
-                            <div class="md:flex md:items-center md:justify-center">
-                                <div class="md:flex-shrink-0">
-                                    <img class="mx-auto h-10 w-10 rounded-full" src="/api/placeholder/40x40.png?text=JD" alt="Jane Doe">
-                                </div>
-                                <div class="mt-3 text-center md:mt-0 md:ml-4 md:flex md:items-center">
-                                    <div class="text-base font-medium text-gray-900">Jane Doe</div>
-                                    <svg class="hidden md:block mx-1 h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M11 0h3L9 20H6l5-20z" />
-                                    </svg>
-                                    <div class="text-base font-medium text-gray-500">CEO, AI Innovations Inc.</div>
-                                </div>
-                            </div>
-                        </footer>
-                    </blockquote>
-                </div>
-            </div>
-        </div>
+
 
     <!-- FAQ Section -->
     <div class="bg-white">
@@ -1017,6 +1111,45 @@
         scrollLeftButton.style.display = 'none';
         scrollRightButton.style.display = 
             tabsScroll.scrollWidth > tabsScroll.clientWidth ? 'block' : 'none';
+       // Card animation
+        const cards = document.querySelectorAll('.card');
+        let currentIndex = 0;
+
+        function showNextCard() {
+            cards[currentIndex].classList.remove('active');
+            currentIndex = (currentIndex + 1) % cards.length;
+            cards[currentIndex].classList.add('active');
+        }
+
+        // Show first card initially
+        cards[0].classList.add('active');
+
+        // Rotate cards every 5 seconds
+        setInterval(showNextCard, 5000);
+
+        // Chart.js setup
+        const ctx2 = document.getElementById('usageChart2').getContext('2d');
+        new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'API Usage',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: 'rgb(79, 70, 229)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
 
         // Add any additional JavaScript for interactivity here
     </script>
